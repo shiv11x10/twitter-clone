@@ -3,5 +3,16 @@
 }
 
 .mainContainer {
-    padding: 20px !important
+    padding: 20px
+}
+
+.time {
+    color: lightgrey;
+}
+
+.tweet {
+    border: 1px solid grey;
+    border-radius: 5px;
+    padding: 5px;
+    margin: 5px;
 }

@@ -1,5 +1,7 @@
 <?php
 
+    date_default_timezone_set('Asia/Kolkata');   
+
     session_start(); //for login
 
     $link = mysqli_connect("localhost", "root", "", "twitter");
@@ -15,7 +17,85 @@
         exit();
     }
 
-    // function displayTweets($type) {
+    //status message like "12 seconds ago" or "5 minutes ago" etc
+    function time_since($time) {
+        $periods = array("s", "min", "hour", "day", "week", "month", "year", "decade");
+        $lengths = array("60","60","24","7","4.35","12","10");
 
-    // }
+        $now = time();
+
+        $difference     = $now - $time;
+
+        for($j = 0; $difference >= $lengths[$j] && $j < count($lengths)-1; $j++) {
+            $difference /= $lengths[$j];
+        }
+
+        $difference = round($difference);
+
+        if($difference != 1) {
+            $periods[$j].= "s";
+        }
+
+        return "$difference $periods[$j]";
+    }
+
+    function displayTweets($type) {
+        global $link;
+
+        if($type == "public") {
+            $whereClause = "";
+        }
+
+        $query = "SELECT * FROM tweets ". $whereClause ." ORDER BY `datetime` DESC LIMIT 10";
+
+        // if(isset($link)) {
+        $result = mysqli_query($link, $query);
+        
+        if(!$result || mysqli_num_rows($result) == 0) {
+            echo "There are no tweets to display";
+        } else {
+            while($row = mysqli_fetch_assoc($result)) {
+                $userQuery = "SELECT * FROM users WHERE id = ".mysqli_real_escape_string($link, $row['userid'])." LIMIT 1";
+                $userQueryResult = mysqli_query($link, $userQuery);
+                $user = mysqli_fetch_assoc($userQueryResult);
+
+                echo "<div class='tweet'><p>".$user['email']." <span class='time'>".time_since(strtotime($row['datetime']))." ago</span>:
+                </p>";
+
+                echo "<p>".$row['tweet']."<p>";
+
+                echo "<p>Follow</p></div>";
+            }
+        }
+    }
+
+    function displaySearch() {
+        echo '<div class="row row-cols-lg-auto g-3 align-items-center mb-3">
+        <div class="col-12">
+          <div class="input-group">
+            <div class="input-group-text"><i class="fa fa-search"></i></div>
+            <input type="text" class="form-control" id="search" placeholder="Search">
+          </div>
+        </div>
+      
+        <div class="col-12">
+          <button class="btn btn-primary">Search Tweets</button>
+        </div>
+      </div>';
+    }
+
+    function displayTweetBox() {
+        if(isset($_SESSION['id']) && $_SESSION['id'] > 0) {
+            echo '<div class="row mb-3">
+            <div class="mb-3">
+                <textarea class="form-control" id="tweetContent"></textarea>
+                </div>
+                <div class="mb-3">
+              <button class="btn btn-primary">Post Tweets</button>
+            </div>
+            </div>
+          ';
+        }
+    }
 ?>
+
