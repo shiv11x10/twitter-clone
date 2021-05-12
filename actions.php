@@ -1,6 +1,7 @@
 <?php 
     include("functions.php");
 
+    // For login and signup handling
     if($_GET['action'] == "loginSignup") {
         
         $email = mysqli_real_escape_string($link, $_POST['email']);
@@ -60,6 +61,34 @@
             echo $error;
         }
     }
+
+    // for following to other users
+    if($_GET['action'] == 'toggleFollow') {
+        if(isset($_SESSION['id'])) {
+
+            if($_SESSION['id'] ==  mysqli_real_escape_string($link, $_POST['userId'])) {
+                echo 3;
+            }
+            else {
+                $query =  "SELECT * FROM isFollowing WHERE follower = ". mysqli_real_escape_string($link, $_SESSION['id']) . " AND isFollowing= ". mysqli_real_escape_string($link, $_POST['userId']) . " LIMIT 1";
+                $result = mysqli_query($link, $query);
+                if(mysqli_num_rows($result) > 0) { // if user if already followed unfloow them
+                    $row = mysqli_fetch_assoc($result);
+                    mysqli_query($link, "DELETE FROM isFollowing WHERE id = ". mysqli_real_escape_string($link, $row['id'])." LIMIT 1");
+
+                    echo 1;
+                } 
+                else { // if user not followd then follow user
+                    mysqli_query($link, "INSERT INTO isFollowing (follower, isFollowing) VALUES (". mysqli_real_escape_string($link, $_SESSION['id']).", ". mysqli_real_escape_string($link, $_POST['userId']). ")");
+                    echo 2;
+                }
+            }
+        }
+        else {
+            echo -1;
+        }
+           
+    } 
 
     mysqli_close($link);
 ?>

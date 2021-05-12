@@ -77,6 +77,36 @@
             }
         })
     })
+
+    // Follow button
+    $(".toggleFollow").click(function() {
+      // alert($(this).data("userid"));
+      let id = $(this).data("userid");
+
+      $.ajax({
+            type: "POST",
+            url: "actions.php?action=toggleFollow",
+            data: "userId=" + id,
+            success: function(result) { //the echo statement in actions.php will be result callback
+                if(result == 1) { // we unfollowed the user
+                  $("a[data-userid='" + id + "']").html("Follow");
+                  
+                }
+                else if(result == 2) { // we followed the user
+                  $("a[data-userid='" + id + "']").html("Unfollow");
+                  
+                }
+                else if (result == 3) {
+                  alert("You cannot follow yourself");
+                }
+                else if(result == -1) {
+                  alert("User not logged in");
+                }
+            }
+        })
+
+    })
+
 </script>
 
   </body>

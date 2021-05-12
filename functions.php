@@ -1,6 +1,6 @@
 <?php
 
-    date_default_timezone_set('Asia/Kolkata');   
+    date_default_timezone_set('Asia/Kolkata');   // for time_since function
 
     session_start(); //for login
 
@@ -21,29 +21,35 @@
     function time_since($time) {
         $periods = array("s", "min", "hour", "day", "week", "month", "year", "decade");
         $lengths = array("60","60","24","7","4.35","12","10");
-
         $now = time();
-
         $difference     = $now - $time;
 
         for($j = 0; $difference >= $lengths[$j] && $j < count($lengths)-1; $j++) {
             $difference /= $lengths[$j];
         }
-
         $difference = round($difference);
-
         if($difference != 1) {
             $periods[$j].= "s";
         }
-
         return "$difference $periods[$j]";
     }
 
     function displayTweets($type) {
         global $link;
 
-        if($type == "public") {
+        if($type == "public") { // all tweets are fetched(from views/home file)
             $whereClause = "";
+        } else if($type == 'isFollowing' && isset($_SESSION['id'])){ // Tweets in timeline of people that user follows
+            $query = "SELECT * FROM isFollowing WHERE follower = ". mysqli_real_escape_string($link, $_SESSION['id']);
+            $result = mysqli_query($link, $query);
+
+            $whereClause = "";
+
+            while($row = mysqli_fetch_assoc($result)) {
+                if($whereClause == "") $whereClause = "WHERE";
+                else $whereClause .= " OR";
+                $whereClause .= " userid = ".$row['isFollowing'];
+            }
         }
 
         $query = "SELECT * FROM tweets ". $whereClause ." ORDER BY `datetime` DESC LIMIT 10";
@@ -64,7 +70,17 @@
 
                 echo "<p>".$row['tweet']."<p>";
 
-                echo "<p>Follow</p></div>";
+                echo "<p><a class='toggleFollow' data-userid='".$row['userid']."'>";
+
+                $isFollowingQuery =  "SELECT * FROM isFollowing WHERE follower = ". mysqli_real_escape_string($link, $_SESSION['id']) . " AND isFollowing= ". mysqli_real_escape_string($link, $row['userid']) . " LIMIT 1";
+                $isFollowingResult = mysqli_query($link, $isFollowingQuery);
+                if(mysqli_num_rows($isFollowingResult) > 0) { 
+                    echo "Unfollow";
+                } else {
+                    echo "Follow";
+                }
+
+                echo "</a></p></div>";
             }
         }
     }
@@ -91,7 +107,7 @@
                 <textarea class="form-control" id="tweetContent"></textarea>
                 </div>
                 <div class="mb-3">
-              <button class="btn btn-primary">Post Tweets</button>
+              <button id = "postTweetButton" class="btn btn-primary">Post Tweets</button>
             </div>
             </div>
           ';
